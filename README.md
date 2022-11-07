@@ -1,8 +1,3 @@
-# End Of Life
-As you can see in issues, I don't take too much time to answer to every needs, because lack of time / skill !
-There won't be any updates from now. I will remove the card from HACS default, you will still be able to use it with HACS custom repository.
-
-
 # Lovelace tempometer-gauge-card
 
 A Home Assistant lovelace custom gauge card for barometer, thermometer, humidity meter or anything you want with custom icons.
@@ -28,38 +23,41 @@ This card is made for a full row, don't try to put it in a grid or horizontal st
 
 ## Options
 ### Card options
-| **Option** | **Type** | **Description** |
-|-|:-:|-|
-| `entity` ***(required)*** | string | The entity to track. Can be followed by an attribute to track `entity.attribute)`|
-| `min` ***(required)*** | number | The gauge's minimum value |
-| `max` ***(required)*** | number | The gauge's maximum value |
-| `entity_min` | string | The entity that define the minimum reached. Can be followed by an attribute to track `entity.attribute)` (you have to create this entity, the card will not compute it !) |
-| `entity_max` | string | The entity that define the maximum reached. Can be followed by an attribute to track `entity.attribute)` (you have to create this entity, the card will not compute it !) |
-| `title` | string | Card title to show. |
-| `card_style` | string | Set this to `thermometer`, `humidity` or `custom` to change icons. (Default will be barometer theme, custom will need icon1, icon2, icon3 !) |
-| `measurement` | string | Custom unit of measurement |
-| `icon1` | string | Icon on left side in custom style. |
-| `icon2` | string | Icon on center in custom style. |
-| `icon3` | string | Icon on right side in custom style. |
-| `icon_color` | string | Icon Color (Default var(--paper-item-icon-color))
-| `severity` | [severity object](#severity-object) | Severity map to change the gauge color. |
-| `decimals` | number | Decimal precision of entity value. |
+| **Option**                | **Type**                        | **Description**                                                                                                                                                           |
+|---------------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `entity` ***(required)*** | string                          | The entity to track. Can be followed by an attribute to track `entity.attribute)`                                                                                         |
+| `min` ***(required)***    | number                          | The gauge's minimum value                                                                                                                                                 |
+| `max` ***(required)***    | number                          | The gauge's maximum value                                                                                                                                                 |
+| `entity_min`              | string                          | The entity that define the minimum reached. Can be followed by an attribute to track `entity.attribute)` (you have to create this entity, the card will not compute it !) |
+| `entity_max`              | string                          | The entity that define the maximum reached. Can be followed by an attribute to track `entity.attribute)` (you have to create this entity, the card will not compute it !) |
+| `title`                   | string                          | Card title to show.                                                                                                                                                       |
+| `card_style`              | string                          | Set this to `thermometer`, `humidity` or `custom` to change icons. (Default will be barometer theme, custom will need icon1, icon2, icon3 !)                              |
+| `measurement`             | string                          | Custom unit of measurement                                                                                                                                                |
+| `icon1`                   | string                          | Icon on left side in custom style.                                                                                                                                        |
+| `icon2`                   | string                          | Icon on center in custom style.                                                                                                                                           |
+| `icon3`                   | string                          | Icon on right side in custom style.                                                                                                                                       |
+| `icon_color`              | string                          | Icon Color (Default var(--paper-item-icon-color))                                                                                                                         |
+| `severity`                | [severity list](#severity-list) | Severity list to change the gauge color.                                                                                                                                  |
+| `decimals`                | number                          | Decimal precision of entity value.                                                                                                                                        |
 
-#### Severity object
-| **Option** | **Type** | **Description** |
-|-|:-:|-|
-| green ***(required)*** | number | Value for the color green.
-| yellow ***(required)*** | number | Value for the color yellow.
-| red ***(required)*** | number | Value for the color red.
-| max | number | Maximum value of the last step, normal color will be rendered above
+#### Severity list
+Will match to the first entry in the list that is in range.
+
+| **Option**             | **Type** | **Description**                                                                                        |
+|------------------------|----------|--------------------------------------------------------------------------------------------------------|
+| color ***(required)*** | string   | Name of the color, one of red, green, yellow, normal for builtin colors, or any other valid CSS color. |
+| min                    | number   | Minimal value (inclusive) to match against. Matches if not set.                                        |
+| max                    | number   | Maximal value (inclusive) to match against. Matches if not set.                                        |
 
 Example:
 ```yaml
 severity:
-  green: 1020
-  yellow: 1000
-  red: 900
-  max: 1100
+  - color: red
+    min: 0
+    max: 10
+  - color: green
+    min: 10
+    max: 100
 ```
 
 ## Tip
@@ -76,9 +74,19 @@ entity_max: sensor.barometer_max_this_week
 title: Barometer
 decimals: 0
 severity:
-  green: 1020
-  yellow: 1000
-  red: 900
+  - color: red
+    max: 950
+  - color: yellow
+    min: 950
+    max: 975
+  - color: green
+    min: 975
+    max: 1025
+  - color: white
+    min: 1025
+    max: 1035
+  - color: "#000"  # always quote hex, yaml will see it as a comment otherwise
+    min: 1035
 ```
 ```yaml
 type: 'custom:tempometer-gauge-card'
@@ -90,9 +98,11 @@ entity_max: sensor.temperature_max_this_week
 title: Thermometer
 card_style: thermometer
 severity:
-  green: 22
-  yellow: 24
-  red: 27
+  - max: 22
+    color: green  # will match if temp is lower than 22
+  - max: 24
+    color: yellow  # will match if temp is lower than 24 but higher than 22
+  - color: red  # will always match
 ```
 ```yaml
 type: 'custom:tempometer-gauge-card'
@@ -107,10 +117,16 @@ icon1: mdi:flash-off
 icon2: mdi:flash-outline
 icon3: mdi:flash
 severity:
-  green: 1000
-  yellow: 2000
-  red: 3000
-  max: 5000
+  - color: green
+    min: 1000
+    max: 1500
+  - color: yellow
+    min: 1500
+    max: 2000
+  - color: red
+    max: 4000
+  - color: black
+    max: 5000
 ```
 
-Maybe more to come ! PR are welcome and i can have a look to features requests.
+Maybe more to come ! PR are welcome and I can have a look to features requests.

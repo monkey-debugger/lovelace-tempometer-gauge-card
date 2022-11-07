@@ -1,58 +1,58 @@
 console.info(`%c TEMPOMETER-CARD \n%c      v1.4-beta.1`, 'color: orange; font-weight: bold; background: black', 'color: white; font-weight: bold; background: dimgray');
 class TempometerGaugeCard extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-  setConfig(config) {
-    if (!config.entity) {
-      throw new Error('Please define an entity');
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
     }
-	if (config.max == null) {
-		throw new Error('Please define the max config option');
-	}
-	if (config.min == null) {
-		throw new Error('Please define the min config option');
-	}
+    setConfig(config) {
+        if (!config.entity) {
+            throw new Error('Please define an entity');
+        }
+        if (config.max == null) {
+            throw new Error('Please define the max config option');
+        }
+        if (config.min == null) {
+            throw new Error('Please define the min config option');
+        }
 
-    const root = this.shadowRoot;
-    if (root.lastChild) root.removeChild(root.lastChild);
+        const root = this.shadowRoot;
+        if (root.lastChild) root.removeChild(root.lastChild);
 
-    const cardConfig = Object.assign({}, config);
-    if (!cardConfig.scale) cardConfig.scale = "50px";
+        const cardConfig = Object.assign({}, config);
+        if (!cardConfig.scale) cardConfig.scale = "50px";
 
-    if (config.horizontal) {
-      cardConfig.scale = "40px";
-    }
-    
-    const entityParts = this._splitEntityAndAttribute(cardConfig.entity);
-    cardConfig.entity = entityParts.entity;
-    if (entityParts.attribute) cardConfig.attribute = entityParts.attribute;
+        if (config.horizontal) {
+            cardConfig.scale = "40px";
+        }
 
-    if (cardConfig.entity_min !== undefined) {
-      const entityMinParts = this._splitEntityAndAttribute(cardConfig.entity_min);
-      cardConfig.entity_min = entityMinParts.entity;
-      if (entityMinParts.attribute) cardConfig.minAttribute = entityMinParts.attribute;
-    }
+        const entityParts = this._splitEntityAndAttribute(cardConfig.entity);
+        cardConfig.entity = entityParts.entity;
+        if (entityParts.attribute) cardConfig.attribute = entityParts.attribute;
 
-    if (cardConfig.entity_max !== undefined) {
-      const entityMaxParts = this._splitEntityAndAttribute(cardConfig.entity_max);
-      cardConfig.entity_max = entityMaxParts.entity;
-      if (entityMaxParts.attribute) cardConfig.maxAttribute = entityMaxParts.attribute;
-    }
-    
-    if (config.icon_color !== undefined) {
-        var icon_color = config.icon_color;
-    } else {
-        var icon_color = "var(--paper-item-icon-color)";
-    }
-	    
-    let card_style = cardConfig.card_style;
-    const card = document.createElement('ha-card');
-    const content = document.createElement('div');
-    const style = document.createElement('style');
+        if (cardConfig.entity_min !== undefined) {
+            const entityMinParts = this._splitEntityAndAttribute(cardConfig.entity_min);
+            cardConfig.entity_min = entityMinParts.entity;
+            if (entityMinParts.attribute) cardConfig.minAttribute = entityMinParts.attribute;
+        }
 
-    style.textContent = `
+        if (cardConfig.entity_max !== undefined) {
+            const entityMaxParts = this._splitEntityAndAttribute(cardConfig.entity_max);
+            cardConfig.entity_max = entityMaxParts.entity;
+            if (entityMaxParts.attribute) cardConfig.maxAttribute = entityMaxParts.attribute;
+        }
+
+        if (config.icon_color !== undefined) {
+            var icon_color = config.icon_color;
+        } else {
+            var icon_color = "var(--paper-item-icon-color)";
+        }
+
+        let card_style = cardConfig.card_style;
+        const card = document.createElement('ha-card');
+        const content = document.createElement('div');
+        const style = document.createElement('style');
+
+        style.textContent = `
       ha-card {
         --base-unit: ${cardConfig.scale};
         height: calc(var(--base-unit)*3.5);
@@ -199,7 +199,7 @@ class TempometerGaugeCard extends HTMLElement {
         transform: rotate(125deg);
       }
     `;
-    content.innerHTML = `
+        content.innerHTML = `
     <div id="gauge-icons" class="gauge-icons" style="display: none;">
         <ha-icon class="icon1" icon="${cardConfig.icon1}"></ha-icon>
         <ha-icon class="icon2" icon="${cardConfig.icon2}"></ha-icon>
@@ -247,172 +247,159 @@ class TempometerGaugeCard extends HTMLElement {
         </div>
       </div>
     `;
-    card.appendChild(content);
-    card.appendChild(style);
-    card.addEventListener('click', event => {
-      this._fire('hass-more-info', { entityId: cardConfig.entity });
-    });
-    root.appendChild(card);
-    this._config = cardConfig;
-	
-	if (card_style == "thermometer") {
-		root.getElementById("gauge-icons-baro").style.display = 'none';
-		root.getElementById("gauge-icons-water").style.display = 'none';
-		root.getElementById("gauge-icons-thermo").style.display = 'block';
-		root.getElementById("gauge-icons").style.display = 'none';
-	} else if (card_style == "humidity") {
-		root.getElementById("gauge-icons-baro").style.display = 'none';
-		root.getElementById("gauge-icons-water").style.display = 'block';
-		root.getElementById("gauge-icons-thermo").style.display = 'none';
-		root.getElementById("gauge-icons").style.display = 'none';
-	} else if (card_style == "custom") {
-	    root.getElementById("gauge-icons-baro").style.display = 'none';
-		root.getElementById("gauge-icons-water").style.display = 'none';
-		root.getElementById("gauge-icons-thermo").style.display = 'none';
-		root.getElementById("gauge-icons").style.display = 'block';
-	}
-  }
+        card.appendChild(content);
+        card.appendChild(style);
+        card.addEventListener('click', event => {
+            this._fire('hass-more-info', { entityId: cardConfig.entity });
+        });
+        root.appendChild(card);
+        this._config = cardConfig;
 
-  _splitEntityAndAttribute(entity) {
-      let parts = entity.split('.');
-      if (parts.length < 3) {
-          return { entity: entity };
-      }
-
-      return { attribute: parts.pop(), entity: parts.join('.') };
-  }
-
-  _fire(type, detail, options) {
-    const node = this.shadowRoot;
-    options = options || {};
-    detail = (detail === null || detail === undefined) ? {} : detail;
-    const event = new Event(type, {
-      bubbles: options.bubbles === undefined ? true : options.bubbles,
-      cancelable: Boolean(options.cancelable),
-      composed: options.composed === undefined ? true : options.composed
-    });
-    event.detail = detail;
-    node.dispatchEvent(event);
-    return event;
-  }
-
-  _translateTurn(value, config) {
-    return 5 * (value - config.min) / (config.max - config.min);
-  }
-
-  _computeSeverity(stateValue, sections) {
-    let numberValue = Number(stateValue);
-    const severityMap = {
-      red: "var(--label-badge-red)",
-      green: "var(--label-badge-green)",
-      yellow: "var(--label-badge-yellow)",
-      normal: "var(--label-badge-blue)",
-    };
-    if (!sections) return severityMap["normal"];
-    let sortable = [];
-    for (let severity in sections) {
-      sortable.push([severity, sections[severity]]);
-    }
-    sortable.sort((a, b) => { return a[1] - b[1] });
-    if (numberValue >= sortable[0][1] && numberValue < sortable[1][1]) {
-      return severityMap[sortable[0][0]];
-    }
-    if (numberValue >= sortable[1][1] && numberValue < sortable[2][1]) {
-      return severityMap[sortable[1][0]];
-    }
-    if (sortable.length === 4) {
-      if (numberValue >= sortable[2][1] && numberValue < sortable[3][1]) {
-        return severityMap[sortable[2][0]];
-      }
-      if (numberValue > sortable[3][1]) {
-        return severityMap["normal"]
-      }
-    } else {
-      if (numberValue >= sortable[2][1]) {
-        return severityMap[sortable[2][0]];
-      }
-    }
-    return severityMap["normal"];
-  }
-
-  _getEntityStateValue(entity, attribute) {
-    if (!attribute) {
-      return entity.state;
+        if (card_style == "thermometer") {
+            root.getElementById("gauge-icons-baro").style.display = 'none';
+            root.getElementById("gauge-icons-water").style.display = 'none';
+            root.getElementById("gauge-icons-thermo").style.display = 'block';
+            root.getElementById("gauge-icons").style.display = 'none';
+        } else if (card_style == "humidity") {
+            root.getElementById("gauge-icons-baro").style.display = 'none';
+            root.getElementById("gauge-icons-water").style.display = 'block';
+            root.getElementById("gauge-icons-thermo").style.display = 'none';
+            root.getElementById("gauge-icons").style.display = 'none';
+        } else if (card_style == "custom") {
+            root.getElementById("gauge-icons-baro").style.display = 'none';
+            root.getElementById("gauge-icons-water").style.display = 'none';
+            root.getElementById("gauge-icons-thermo").style.display = 'none';
+            root.getElementById("gauge-icons").style.display = 'block';
+        }
     }
 
-    return entity.attributes[attribute];
-  }
+    _splitEntityAndAttribute(entity) {
+        let parts = entity.split('.');
+        if (parts.length < 3) {
+            return { entity: entity };
+        }
 
-  set hass(hass) {
-    const root = this.shadowRoot;
-    const config = this._config;
-    var entityState = this._getEntityStateValue(hass.states[config.entity], config.attribute);
-    var maxEntityState = null;
-    var minEntityState = null;
-    if (config.entity_max !== undefined) {
-        maxEntityState = this._getEntityStateValue(hass.states[config.entity_max], config.maxAttribute);
-    } else {
-        root.getElementById("recentMax").style.display = 'none';
-    }
-    if (config.entity_min !== undefined) {
-        minEntityState = this._getEntityStateValue(hass.states[config.entity_min], config.minAttribute);
-    } else {
-        root.getElementById("recentMin").style.display = 'none';
+        return { attribute: parts.pop(), entity: parts.join('.') };
     }
 
-    let measurement = "";
-    if (config.measurement == null) {
-      if (hass.states[config.entity].attributes.unit_of_measurement === undefined) {
-        measurement = '';
-      } else {
-        measurement = hass.states[config.entity].attributes.unit_of_measurement;
-      }
-    } else {
-      measurement = config.measurement;
+    _fire(type, detail, options) {
+        const node = this.shadowRoot;
+        options = options || {};
+        detail = (detail === null || detail === undefined) ? {} : detail;
+        const event = new Event(type, {
+            bubbles: options.bubbles === undefined ? true : options.bubbles,
+            cancelable: Boolean(options.cancelable),
+            composed: options.composed === undefined ? true : options.composed
+        });
+        event.detail = detail;
+        node.dispatchEvent(event);
+        return event;
     }
 
-	root.getElementById("minval").innerHTML = config.min;
-	root.getElementById("maxval").innerHTML = config.max;
-    
-  // Set decimal precision
-  if (config.decimals !== undefined) {
-      // Only allow positive numbers
-      if (config.decimals >= 0) {
-        entityState = Math.round(parseFloat(entityState) * (10 ** config.decimals)) / (10 ** config.decimals)   // Round (https://stackoverflow.com/a/11832950)
-        entityState = entityState.toFixed(config.decimals)  // Add trailing zeroes if applicable        
-      }
-  }
-
-	if (entityState !== this._entityState) {
-      root.getElementById("percent").textContent = `${entityState} ${measurement}`;
-      root.getElementById("title").textContent = config.title;
-      const turn = this._translateTurn(entityState, config) / 10;
-      root.getElementById("gauge").style.transform = `rotate(${turn}turn)`;
-      root.getElementById("gauge").style.backgroundColor = this._computeSeverity(entityState, config.severity);
-      this._entityState = entityState;
+    _translateTurn(value, config) {
+        return 5 * (value - config.min) / (config.max - config.min);
     }
-	if (config.entity_max !== null) {
-	    if (maxEntityState !== this._maxEntityState) {
-		    this._maxEntityState = maxEntityState;
-		    const turn3 = this._translateTurn(maxEntityState, config) /10;  
-		    root.getElementById("recentMax").style.transform = `rotate(${turn3}turn)`;
-		    root.getElementById("svg_max_title").innerHTML = maxEntityState;
-	    }
-	}
-	if (config.entity_min !== null) {
-	    if (minEntityState !== this._minEntityState) {
-		    this._minEntityState = minEntityState;
-		    const turn2 = this._translateTurn(minEntityState, config) /10;
-            root.getElementById("recentMin").style.transform = `rotate(${turn2}turn)`;
-		    root.getElementById("svg_min_title").innerHTML = minEntityState;
-	    } 
-	}
-    root.lastChild.hass = hass;
-  }
 
-  getCardSize() {
-    return 1;
-  }
+    _computeSeverity(stateValue, sections) {
+        let numberValue = Number(stateValue);
+        const severityMap = {
+            red: "var(--label-badge-red)",
+            green: "var(--label-badge-green)",
+            yellow: "var(--label-badge-yellow)",
+            normal: "var(--label-badge-blue)",
+        };
+        if (!sections) return severityMap["normal"];
+        for (let severityRange of sections) {
+            if (!severityRange.min || numberValue >= severityRange.min) {
+                if (!severityRange.max || numberValue <= severityRange.max) {
+                    if (severityRange.color in severityMap) {
+                        return severityMap[severityRange.color];
+                    }
+                    return severityRange.color;
+                }
+            }
+        }
+        return severityMap["normal"];
+    }
+
+    _getEntityStateValue(entity, attribute) {
+        if (!attribute) {
+            return entity.state;
+        }
+
+        return entity.attributes[attribute];
+    }
+
+    set hass(hass) {
+        const root = this.shadowRoot;
+        const config = this._config;
+        var entityState = this._getEntityStateValue(hass.states[config.entity], config.attribute);
+        var maxEntityState = null;
+        var minEntityState = null;
+        if (config.entity_max !== undefined) {
+            maxEntityState = this._getEntityStateValue(hass.states[config.entity_max], config.maxAttribute);
+        } else {
+            root.getElementById("recentMax").style.display = 'none';
+        }
+        if (config.entity_min !== undefined) {
+            minEntityState = this._getEntityStateValue(hass.states[config.entity_min], config.minAttribute);
+        } else {
+            root.getElementById("recentMin").style.display = 'none';
+        }
+
+        let measurement = "";
+        if (config.measurement == null) {
+            if (hass.states[config.entity].attributes.unit_of_measurement === undefined) {
+                measurement = '';
+            } else {
+                measurement = hass.states[config.entity].attributes.unit_of_measurement;
+            }
+        } else {
+            measurement = config.measurement;
+        }
+
+        root.getElementById("minval").innerHTML = config.min;
+        root.getElementById("maxval").innerHTML = config.max;
+
+        // Set decimal precision
+        if (config.decimals !== undefined) {
+            // Only allow positive numbers
+            if (config.decimals >= 0) {
+                entityState = Math.round(parseFloat(entityState) * (10 ** config.decimals)) / (10 ** config.decimals)   // Round (https://stackoverflow.com/a/11832950)
+                entityState = entityState.toFixed(config.decimals)  // Add trailing zeroes if applicable
+            }
+        }
+
+        if (entityState !== this._entityState) {
+            root.getElementById("percent").textContent = `${entityState} ${measurement}`;
+            root.getElementById("title").textContent = config.title;
+            const turn = this._translateTurn(entityState, config) / 10;
+            root.getElementById("gauge").style.transform = `rotate(${turn}turn)`;
+            root.getElementById("gauge").style.backgroundColor = this._computeSeverity(entityState, config.severity);
+            this._entityState = entityState;
+        }
+        if (config.entity_max !== null) {
+            if (maxEntityState !== this._maxEntityState) {
+                this._maxEntityState = maxEntityState;
+                const turn3 = this._translateTurn(maxEntityState, config) /10;
+                root.getElementById("recentMax").style.transform = `rotate(${turn3}turn)`;
+                root.getElementById("svg_max_title").innerHTML = maxEntityState;
+            }
+        }
+        if (config.entity_min !== null) {
+            if (minEntityState !== this._minEntityState) {
+                this._minEntityState = minEntityState;
+                const turn2 = this._translateTurn(minEntityState, config) /10;
+                root.getElementById("recentMin").style.transform = `rotate(${turn2}turn)`;
+                root.getElementById("svg_min_title").innerHTML = minEntityState;
+            }
+        }
+        root.lastChild.hass = hass;
+    }
+
+    getCardSize() {
+        return 1;
+    }
 }
 
 customElements.define('tempometer-gauge-card', TempometerGaugeCard);
